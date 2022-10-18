@@ -1,12 +1,12 @@
 use glam::{Mat4, Quat, Vec3};
 
 pub struct Transform {
-    pub position: Vec3,
-    pub scale: Vec3,
+    position: Vec3,
+    scale: Vec3,
     rotation: Rotation,
 }
 
-pub struct Rotation {
+struct Rotation {
     direction: Vec3,
     angle: f32,
 }

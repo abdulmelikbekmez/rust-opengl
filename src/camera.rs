@@ -43,9 +43,10 @@ impl Camera {
         Mat4::look_at_rh(self.position, self.position + self.direction, self.up)
     }
 
-    pub fn update(&mut self, delta: (f64, f64)) {
-        self.yaw += delta.0 * Camera::SENSIVITY;
-        self.pitch -= delta.1 * Camera::SENSIVITY;
+    pub fn update(&mut self, delta: &(f64, f64)) {
+        let (x, y) = delta;
+        self.yaw += x * Camera::SENSIVITY;
+        self.pitch -= y * Camera::SENSIVITY;
 
         if self.pitch > 89. {
             self.pitch = 89.;
