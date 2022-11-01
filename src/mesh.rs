@@ -1,44 +1,59 @@
 use gl::types::{GLfloat, GLuint};
 
-type Pos = [f32; 3];
-type Color = [f32; 3];
+mod index_buffer;
+mod vertex_buffer;
 
-pub struct Vertex(pub Pos, pub Color);
+use vertex_buffer::Vertex;
+
+use self::{index_buffer::IndexBuffer, vertex_buffer::VertexBuffer};
+
+#[rustfmt::skip]
+const VERTICES: [Vertex; 8] = [
+    Vertex([-0.5, -0.5,  0.5], [1.0, 0.0, 0.0]),
+    Vertex([0.5,  -0.5,  0.5], [0.0, 1.0, 0.0]),
+    Vertex([0.5,   0.5,  0.5], [0.0, 0.0, 1.0]),
+    Vertex([-0.5,  0.5,  0.5], [0.0, 1.0, 0.0]),
+
+    Vertex([-0.5, -0.5, -0.5], [1.0, 0.0, 0.0]),
+    Vertex([0.5,  -0.5, -0.5], [0.0, 1.0, 0.0]),
+    Vertex([0.5,   0.5, -0.5], [0.0, 0.0, 1.0]),
+    Vertex([-0.5,  0.5, -0.5], [0.0, 1.0, 0.0])
+];
+
+const ELEMENT_DATA: [GLuint; 36] = [
+    // front
+    0, 1, 2, 2, 3, 0, // right
+    1, 5, 6, 6, 2, 1, // back
+    7, 6, 5, 5, 4, 7, // left
+    4, 0, 3, 3, 7, 4, // bottom
+    4, 5, 1, 1, 0, 4, // top
+    3, 2, 6, 6, 7, 3,
+];
 
 pub struct Mesh {
     vao: GLuint,
-    vbo: GLuint,
-    ebo: GLuint,
-    element_size: usize,
+    #[allow(dead_code)]
+    vb: VertexBuffer,
+    ib: IndexBuffer,
 }
 
 impl Mesh {
-    pub fn new(index_arr: &[GLuint], vertex_arr: &[Vertex]) -> Self {
-        let mut vao = 0;
-        let mut vbo = 0;
-        let mut ebo = 0;
+    pub fn cube() -> Self {
+        Mesh::new(&ELEMENT_DATA, &VERTICES)
+    }
+
+    fn new(index_arr: &[GLuint], vertex_arr: &[Vertex]) -> Self {
         unsafe {
+            let mut vao = 0;
             // Generate Vertex Array and bind
             gl::GenVertexArrays(1, &mut vao);
             gl::BindVertexArray(vao);
 
-            gl::GenBuffers(1, &mut ebo);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-            gl::BufferData(
-                gl::ELEMENT_ARRAY_BUFFER,
-                std::mem::size_of_val(index_arr) as isize,
-                index_arr.as_ptr() as *const _,
-                gl::STATIC_DRAW,
-            );
+            let ib = IndexBuffer::new(index_arr);
+            let vb = VertexBuffer::new(vertex_arr);
 
-            gl::GenBuffers(1, &mut vbo);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                std::mem::size_of_val(vertex_arr) as isize,
-                vertex_arr.as_ptr() as *const _,
-                gl::STATIC_DRAW,
-            );
+            gl::EnableVertexAttribArray(0);
+            gl::EnableVertexAttribArray(1);
 
             gl::VertexAttribPointer(
                 0,
@@ -48,9 +63,6 @@ impl Mesh {
                 std::mem::size_of::<Vertex>() as i32,
                 0 as *const _,
             );
-
-            gl::EnableVertexAttribArray(0);
-
             gl::VertexAttribPointer(
                 1,
                 3,
@@ -59,14 +71,11 @@ impl Mesh {
                 std::mem::size_of::<Vertex>() as i32,
                 (3 * std::mem::size_of::<GLfloat>()) as *const _,
             );
+            vb.unbind();
+            gl::BindVertexArray(0);
+            ib.unbind();
 
-            gl::EnableVertexAttribArray(1);
-        }
-        Mesh {
-            vao,
-            vbo,
-            ebo,
-            element_size: index_arr.len(),
+            Mesh { vao, vb, ib }
         }
     }
 
@@ -76,11 +85,18 @@ impl Mesh {
         }
     }
 
+    pub fn unbind(&self) {
+        unsafe {
+            gl::BindVertexArray(0);
+        }
+    }
+
     pub fn draw(&self) {
+        self.bind();
         unsafe {
             gl::DrawElements(
                 gl::TRIANGLES,
-                self.element_size as i32,
+                self.ib.count,
                 gl::UNSIGNED_INT,
                 0 as *const _,
             );
@@ -92,8 +108,6 @@ impl Drop for Mesh {
     fn drop(&mut self) {
         println!("Mesh dropped!");
         unsafe {
-            gl::DeleteBuffers(1, &self.vbo);
-            gl::DeleteBuffers(1, &self.ebo);
             gl::DeleteVertexArrays(1, &self.vao);
         }
     }

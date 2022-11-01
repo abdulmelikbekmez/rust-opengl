@@ -19,17 +19,17 @@ impl Drop for Shader {
 
 impl Shader {
     pub fn new(src: &str, shader_type: GLenum) -> Self {
-        let id_shader;
+        let id;
         unsafe {
-            id_shader = gl::CreateShader(shader_type);
+            id = gl::CreateShader(shader_type);
             // Attempt to compile the shader
             let c_str = CString::new(src.as_bytes()).unwrap();
-            gl::ShaderSource(id_shader, 1, &c_str.as_ptr(), ptr::null());
-            gl::CompileShader(id_shader);
+            gl::ShaderSource(id, 1, &c_str.as_ptr(), ptr::null());
+            gl::CompileShader(id);
 
-            check_compile_status(&id_shader);
+            check_compile_status(&id);
         }
-        Self { id: id_shader }
+        Self { id }
     }
 }
 
@@ -47,16 +47,16 @@ impl Drop for ShaderProgram {
 }
 
 impl ShaderProgram {
-    pub fn new(vertex_path: &str, fragment_path: &str) -> Self {
-        let a = std::fs::read_to_string(vertex_path).unwrap();
-        let b = std::fs::read_to_string(fragment_path).unwrap();
+    pub fn new(vertex_src: &str, fragment_src: &str) -> Self {
+        // let a = std::fs::read_to_string(vertex_path).expect("Unable to read vertex shader!!");
+        // let b = std::fs::read_to_string(fragment_path).expect("Unable to read fragment shader");
 
-        let vs = Shader::new(a.as_str(), gl::VERTEX_SHADER);
-        let fs = Shader::new(b.as_str(), gl::FRAGMENT_SHADER);
+        let vs = Shader::new(&vertex_src, gl::VERTEX_SHADER);
+        let fs = Shader::new(&fragment_src, gl::FRAGMENT_SHADER);
 
-        let program_id = link_program(&vs, &fs);
+        let id = link_program(&vs, &fs);
 
-        return Self { id: program_id };
+        return Self { id };
     }
 
     pub fn activate(&self) {
@@ -64,29 +64,33 @@ impl ShaderProgram {
             gl::UseProgram(self.id);
         }
     }
-    // fn set_bool(&self, name: &str, value: bool) {
-    //     unsafe {
-    //         let c_str = CString::new(name.as_bytes()).unwrap();
-    //         let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-    //         gl::Uniform1i(location, value as GLint);
-    //     }
-    // }
 
-    // pub fn set_int(&self, name: &str, value: i8) {
-    //     unsafe {
-    //         let c_str = CString::new(name.as_bytes()).unwrap();
-    //         let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-    //         gl::Uniform1i(location, value as GLint);
-    //     }
-    // }
+    #[allow(dead_code)]
+    fn set_bool(&self, name: &str, value: bool) {
+        unsafe {
+            let c_str = CString::new(name.as_bytes()).unwrap();
+            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
+            gl::Uniform1i(location, value as GLint);
+        }
+    }
 
-    // pub fn set_float(&self, name: &str, value: f32) {
-    //     unsafe {
-    //         let c_str = CString::new(name.as_bytes()).unwrap();
-    //         let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-    //         gl::Uniform1f(location, value as GLfloat);
-    //     }
-    // }
+    #[allow(dead_code)]
+    pub fn set_int(&self, name: &str, value: i8) {
+        unsafe {
+            let c_str = CString::new(name.as_bytes()).unwrap();
+            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
+            gl::Uniform1i(location, value as GLint);
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn set_float(&self, name: &str, value: f32) {
+        unsafe {
+            let c_str = CString::new(name.as_bytes()).unwrap();
+            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
+            gl::Uniform1f(location, value as GLfloat);
+        }
+    }
 
     pub fn set_mat4(&self, name: &str, mat4: &Mat4) {
         unsafe {
