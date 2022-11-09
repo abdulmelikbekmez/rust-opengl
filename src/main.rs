@@ -56,7 +56,7 @@ fn main() {
     println!("{:?}", version.to_str().unwrap());
 
     // Create GLSL shaders and use shader program
-    let shader = ShaderProgram::new(
+    let mut shader = ShaderProgram::new(
         include_str!("../resources/vertex.glsl"),
         include_str!("../resources/fragment.glsl"),
     );

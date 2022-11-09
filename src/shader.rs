@@ -1,5 +1,6 @@
 use gl::types::*;
 use glam::Mat4;
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::ptr;
 use std::str;
@@ -35,6 +36,7 @@ impl Shader {
 
 pub struct ShaderProgram {
     id: GLuint,
+    locations: HashMap<&'static str, GLint>,
 }
 
 impl Drop for ShaderProgram {
@@ -56,7 +58,10 @@ impl ShaderProgram {
 
         let id = link_program(&vs, &fs);
 
-        return Self { id };
+        return Self {
+            id,
+            locations: HashMap::new(),
+        };
     }
 
     pub fn activate(&self) {
@@ -65,38 +70,43 @@ impl ShaderProgram {
         }
     }
 
-    #[allow(dead_code)]
-    fn set_bool(&self, name: &str, value: bool) {
+    fn get_location(&mut self, name: &'static str) -> GLint {
+        if let Some(&loc) = self.locations.get(name) {
+            return loc;
+        }
+
         unsafe {
             let c_str = CString::new(name.as_bytes()).unwrap();
-            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-            gl::Uniform1i(location, value as GLint);
+            let loc = gl::GetUniformLocation(self.id, c_str.as_ptr());
+            self.locations.insert(name, loc);
+            return loc;
         }
     }
 
     #[allow(dead_code)]
-    pub fn set_int(&self, name: &str, value: i8) {
+    pub fn set_bool(&mut self, name: &'static str, value: bool) {
         unsafe {
-            let c_str = CString::new(name.as_bytes()).unwrap();
-            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-            gl::Uniform1i(location, value as GLint);
+            gl::Uniform1i(self.get_location(name), value as GLint);
         }
     }
 
     #[allow(dead_code)]
-    pub fn set_float(&self, name: &str, value: f32) {
+    pub fn set_int(&mut self, name: &'static str, value: i8) {
         unsafe {
-            let c_str = CString::new(name.as_bytes()).unwrap();
-            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-            gl::Uniform1f(location, value as GLfloat);
+            gl::Uniform1i(self.get_location(name), value as GLint);
         }
     }
 
-    pub fn set_mat4(&self, name: &str, mat4: &Mat4) {
+    #[allow(dead_code)]
+    pub fn set_float(&mut self, name: &'static str, value: f32) {
         unsafe {
-            let c_str = CString::new(name.as_bytes()).unwrap();
-            let location = gl::GetUniformLocation(self.id, c_str.as_ptr());
-            gl::UniformMatrix4fv(location, 1, 0, mat4.to_cols_array().as_ptr());
+            gl::Uniform1f(self.get_location(name), value as GLfloat);
+        }
+    }
+
+    pub fn set_mat4(&mut self, name: &'static str, mat4: &Mat4) {
+        unsafe {
+            gl::UniformMatrix4fv(self.get_location(name), 1, 0, mat4.to_cols_array().as_ptr());
         }
     }
 }

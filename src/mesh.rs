@@ -30,11 +30,29 @@ const ELEMENT_DATA: [GLuint; 36] = [
     3, 2, 6, 6, 7, 3,
 ];
 
+#[allow(dead_code)]
 pub struct Mesh {
     vao: GLuint,
-    #[allow(dead_code)]
     vb: VertexBuffer,
     ib: IndexBuffer,
+}
+
+static mut BINDED_ID: GLuint = 0;
+
+fn bind(id: GLuint) {
+    unsafe {
+        if id != BINDED_ID {
+            gl::BindVertexArray(id);
+            BINDED_ID = id;
+        }
+    }
+}
+
+fn unbind() {
+    unsafe {
+        gl::BindVertexArray(0);
+        BINDED_ID = 0;
+    }
 }
 
 impl Mesh {
@@ -43,14 +61,15 @@ impl Mesh {
     }
 
     fn new(index_arr: &[GLuint], vertex_arr: &[Vertex]) -> Self {
+        let vb = VertexBuffer::new(vertex_arr);
         unsafe {
             let mut vao = 0;
             // Generate Vertex Array and bind
             gl::GenVertexArrays(1, &mut vao);
+            bind(vao);
             gl::BindVertexArray(vao);
 
             let ib = IndexBuffer::new(index_arr);
-            let vb = VertexBuffer::new(vertex_arr);
 
             gl::EnableVertexAttribArray(0);
             gl::EnableVertexAttribArray(1);
@@ -72,7 +91,7 @@ impl Mesh {
                 (3 * std::mem::size_of::<GLfloat>()) as *const _,
             );
             vb.unbind();
-            gl::BindVertexArray(0);
+            unbind();
             ib.unbind();
 
             Mesh { vao, vb, ib }
@@ -80,15 +99,12 @@ impl Mesh {
     }
 
     pub fn bind(&self) {
-        unsafe {
-            gl::BindVertexArray(self.vao);
-        }
+        bind(self.vao)
     }
 
+    #[allow(dead_code)]
     pub fn unbind(&self) {
-        unsafe {
-            gl::BindVertexArray(0);
-        }
+        unbind();
     }
 
     pub fn draw(&self) {
