@@ -7,6 +7,6 @@ authors = ["Abdulmelik Bekmez"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+glutin = "0.29.1"
 gl = "*"
-glutin = "*"
 glam = "0.21.3"
