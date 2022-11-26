@@ -3,6 +3,7 @@ use std::ffi::CString;
 use glutin::{
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
+    window::CursorGrabMode,
 };
 
 use crate::key::KeyboardState;
@@ -30,6 +31,10 @@ impl AppBuilder {
         };
 
         gl_context.window().set_cursor_visible(false);
+        gl_context
+            .window()
+            .set_cursor_grab(CursorGrabMode::Locked)
+            .unwrap();
 
         gl::load_with(|ptr| gl_context.get_proc_address(ptr));
 

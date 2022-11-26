@@ -45,6 +45,7 @@ impl Transform {
         }
     }
 
+    #[inline]
     pub fn get_matrix(&self) -> Mat4 {
         Mat4::from_scale_rotation_translation(
             self.scale,

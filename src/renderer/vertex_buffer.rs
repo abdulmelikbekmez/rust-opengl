@@ -2,8 +2,8 @@ use gl::types::GLuint;
 
 pub struct VertexBuffer {
     id: GLuint,
-    size: i32,
-    length: i32,
+    element_count: i32,
+    byte_length: i32,
 }
 
 static mut BINDED_ID: GLuint = 0;
@@ -24,8 +24,8 @@ impl VertexBuffer {
         }
         Self {
             id,
-            size: N as i32,
-            length: N as i32 * std::mem::size_of::<f32>() as i32,
+            element_count: N as i32,
+            byte_length: N as i32 * std::mem::size_of::<f32>() as i32,
         }
     }
 
@@ -42,22 +42,23 @@ impl VertexBuffer {
                 gl::DYNAMIC_DRAW,
             );
 
+            let byte_length = std::mem::size_of::<T>() as i32;
             Self {
                 id,
-                size: element_count as i32,
-                length: element_count as i32 * std::mem::size_of::<T>() as i32,
+                element_count: byte_length / std::mem::size_of::<f32>() as i32,
+                byte_length,
             }
         }
     }
 
     #[inline]
-    pub fn get_size(&self) -> i32 {
-        return self.size;
+    pub fn get_element_count(&self) -> i32 {
+        return self.element_count;
     }
 
     #[inline]
     pub fn get_byte_length(&self) -> i32 {
-        return self.length;
+        return self.byte_length;
     }
 
     pub fn bind(&self) {
