@@ -31,16 +31,16 @@ impl Rotation {
 impl Transform {
     pub fn new() -> Self {
         Self {
-            position: Vec3 {
-                x: 0.,
-                y: 0.,
-                z: 0.,
-            },
-            scale: Vec3 {
-                x: 1.,
-                y: 1.,
-                z: 1.,
-            },
+            position: Vec3::ZERO,
+            scale: Vec3::ONE,
+            rotation: Rotation::new(),
+        }
+    }
+
+    pub fn with_pos(position: Vec3) -> Self {
+        Self {
+            position,
+            scale: Vec3::ONE,
             rotation: Rotation::new(),
         }
     }

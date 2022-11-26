@@ -89,7 +89,7 @@ impl AppBuilder {
                     unsafe {
                         // Clear the screen to black
                         gl::Clear(gl::DEPTH_BUFFER_BIT | gl::COLOR_BUFFER_BIT);
-                        app.draw();
+                        app.draw(&w);
                     }
                     gl_context.swap_buffers().unwrap();
                 }
@@ -102,7 +102,7 @@ impl AppBuilder {
 pub trait Application {
     fn new() -> Self;
     fn update(&mut self, key_state: &KeyboardState, window: &Window);
-    fn draw(&self);
+    fn draw(&mut self, window: &Window);
     fn event(&mut self);
     fn on_mouse_move(&mut self, delta: &(f64, f64));
 }

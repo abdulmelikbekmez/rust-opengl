@@ -57,6 +57,7 @@ impl Camera {
         self.direction.x = (self.yaw.to_radians().cos() * self.pitch.to_radians().cos()) as f32;
         self.direction.y = self.pitch.to_radians().sin() as f32;
         self.direction.z = (self.yaw.to_radians().sin() * self.pitch.to_radians().cos()) as f32;
+        println!("camera direction => {}", self.direction);
     }
 
     pub fn handle_input(&mut self, key_state: &KeyboardState) {
@@ -72,5 +73,6 @@ impl Camera {
         if key_state.is_pressed(&VirtualKeyCode::D) {
             self.position += self.direction.cross(self.up).normalize() * Camera::SPEED;
         }
+        println!("camera position => {}", self.position);
     }
 }
