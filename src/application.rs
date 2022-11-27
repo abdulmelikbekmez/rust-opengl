@@ -3,6 +3,7 @@ use std::ffi::CString;
 use glutin::{
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
+    window::CursorGrabMode,
 };
 
 use crate::key::KeyboardState;
@@ -30,6 +31,10 @@ impl AppBuilder {
         };
 
         gl_context.window().set_cursor_visible(false);
+        gl_context
+            .window()
+            .set_cursor_grab(CursorGrabMode::Locked)
+            .unwrap();
 
         gl::load_with(|ptr| gl_context.get_proc_address(ptr));
 
@@ -89,7 +94,7 @@ impl AppBuilder {
                     unsafe {
                         // Clear the screen to black
                         gl::Clear(gl::DEPTH_BUFFER_BIT | gl::COLOR_BUFFER_BIT);
-                        app.draw();
+                        app.draw(&w);
                     }
                     gl_context.swap_buffers().unwrap();
                 }
@@ -102,7 +107,7 @@ impl AppBuilder {
 pub trait Application {
     fn new() -> Self;
     fn update(&mut self, key_state: &KeyboardState, window: &Window);
-    fn draw(&self);
+    fn draw(&mut self, window: &Window);
     fn event(&mut self);
     fn on_mouse_move(&mut self, delta: &(f64, f64));
 }

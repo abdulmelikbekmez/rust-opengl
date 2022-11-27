@@ -30,18 +30,7 @@ impl IndexBuffer {
     #[allow(dead_code)]
     pub fn bind(&self) {
         unsafe {
-            if self.id != BINDED_ID {
-                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
-                BINDED_ID = self.id;
-            }
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn unbind(&self) {
-        unsafe {
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-            BINDED_ID = 0;
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
         }
     }
 }
@@ -49,6 +38,7 @@ impl IndexBuffer {
 impl Drop for IndexBuffer {
     fn drop(&mut self) {
         unsafe {
+            println!("index buffer deleted");
             gl::DeleteBuffers(1, &self.id);
         }
     }

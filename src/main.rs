@@ -1,72 +1,41 @@
 use application::Application;
 use application::*;
-use camera::Camera;
-use glam::Mat4;
 use key::KeyboardState;
-use mesh::Mesh;
-use shader::*;
-use transform::Transform;
+use renderer::Renderer;
+use scene::Scene;
 
 mod application;
 mod camera;
+mod entity;
 mod key;
-mod mesh;
-mod shader;
+mod renderer;
+mod scene;
 mod transform;
 
 struct MyApp {
-    mesh: Mesh,
-    shader: ShaderProgram,
-    camera: Camera,
-    transform: Transform,
+    renderer: Renderer,
+    scene: Scene,
 }
 impl Application for MyApp {
     fn new() -> Self {
-        let camera = Camera::new();
-        let shader = ShaderProgram::new(
-            include_str!("../resources/vertex.glsl"),
-            include_str!("../resources/fragment.glsl"),
-        );
-        let mesh = Mesh::cube();
-        mesh.bind();
-        shader.activate();
-        let transform = Transform::new();
-        Self {
-            mesh,
-            shader,
-            transform,
-            camera,
-        }
+        let renderer = Renderer::cube();
+        let mut scene = Scene::new();
+        scene.add_static_entities(30);
+        Self { renderer, scene }
     }
 
-    fn update(&mut self, key_state: &KeyboardState, window: &Window) {
-        self.camera.handle_input(key_state);
-
-        self.camera.handle_input(&key_state);
-
-        let model = self.transform.get_matrix();
-        self.shader.set_mat4("model", &model);
-
-        let view = self.camera.get_matrix();
-        self.shader.set_mat4("view", &view);
-
-        let projection = Mat4::perspective_rh(
-            (45 as f32).to_radians() as f32,
-            window.width / window.height,
-            0.1,
-            100.,
-        );
-        self.shader.set_mat4("projection", &projection);
+    fn update(&mut self, key_state: &KeyboardState, _: &Window) {
+        self.scene.get_camera().handle_input(key_state);
     }
 
-    fn draw(&self) {
-        self.mesh.draw();
+    fn draw(&mut self, window: &Window) {
+        self.renderer.draw(&mut self.scene, window);
     }
 
     fn event(&mut self) {}
 
     fn on_mouse_move(&mut self, delta: &(f64, f64)) {
-        self.camera.update(delta);
+        self.scene.get_camera().update(delta);
     }
 }
 
