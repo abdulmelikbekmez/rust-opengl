@@ -44,30 +44,24 @@ impl Renderer {
         let buffer = self.vao.get_instanced_buffer();
         buffer.bind();
 
-        let mut i = 0;
-        while i < scene.get_entities().len() {
-            if scene.get_entities()[i].is_static() {
-                let e = scene.get_entities().remove(i);
-                let data = e.get_transform().get_matrix().to_cols_array();
-                let byte_length = std::mem::size_of_val(&data) as isize;
-                unsafe {
-                    gl::BufferSubData(
-                        gl::ARRAY_BUFFER,
-                        self.last_static_index,
-                        byte_length,
-                        data.as_ptr() as *const _,
-                    );
-                }
-                self.count += 1;
-                self.last_static_index += byte_length;
-            } else {
-                i += 1;
+        while let Some(e) = scene.get_static_entities().pop() {
+            let data = e.get_transform().get_matrix().to_cols_array();
+            let byte_length = std::mem::size_of_val(&data) as isize;
+            unsafe {
+                gl::BufferSubData(
+                    gl::ARRAY_BUFFER,
+                    self.last_static_index,
+                    byte_length,
+                    data.as_ptr() as *const _,
+                );
             }
+            self.count += 1;
+            self.last_static_index += byte_length;
         }
 
         let mut count = self.count as i32;
         let mut index = self.last_static_index;
-        for e in scene.get_entities() {
+        for e in scene.get_dynamic_entities() {
             let data = e.get_transform().get_matrix().to_cols_array();
             let byte_length = std::mem::size_of_val(&data) as isize;
             unsafe {

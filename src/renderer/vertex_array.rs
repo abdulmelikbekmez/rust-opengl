@@ -75,14 +75,17 @@ impl VertexArray {
     //     self.instanced_buffer = Some(buffer);
     // }
 
+    #[inline]
     pub fn get_instanced_buffer(&mut self) -> &mut VertexBuffer {
         &mut self.instanced_buffer
     }
 
+    #[inline]
     pub fn get_index_size(&self) -> i32 {
         return self.index_size;
     }
 
+    #[inline]
     pub fn bind(&self) {
         unsafe {
             gl::BindVertexArray(self.id);

@@ -4,7 +4,8 @@ use crate::{camera::Camera, entity::Entity};
 
 pub struct Scene {
     camera: Camera,
-    entity_list: Vec<Entity>,
+    static_entity_list: Vec<Entity>,
+    dynamic_entity_list: Vec<Entity>,
 }
 
 impl Scene {
@@ -12,8 +13,8 @@ impl Scene {
         let camera = Camera::new();
         Self {
             camera,
-
-            entity_list: vec![],
+            static_entity_list: vec![],
+            dynamic_entity_list: vec![],
         }
     }
 
@@ -27,7 +28,7 @@ impl Scene {
                         (j * padding) as f32,
                         (k * padding) as f32,
                     );
-                    self.entity_list.push(Entity::new(pos, true));
+                    self.static_entity_list.push(Entity::new(pos));
                 }
             }
         }
@@ -39,7 +40,12 @@ impl Scene {
     }
 
     #[inline]
-    pub fn get_entities(&mut self) -> &mut Vec<Entity> {
-        &mut self.entity_list
+    pub fn get_static_entities(&mut self) -> &mut Vec<Entity> {
+        &mut self.static_entity_list
+    }
+
+    #[inline]
+    pub fn get_dynamic_entities(&mut self) -> &mut Vec<Entity> {
+        &mut self.dynamic_entity_list
     }
 }
