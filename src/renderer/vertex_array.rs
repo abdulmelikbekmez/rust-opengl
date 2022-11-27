@@ -4,14 +4,13 @@ use glam::Mat4;
 use super::{mesh::Mesh, vertex_buffer::VertexBuffer};
 
 pub struct VertexArray {
-    index: u32,
     id: GLuint,
     index_size: i32,
     instanced_buffer: VertexBuffer,
 }
 
 impl VertexArray {
-    pub fn new(mesh: &Mesh) -> Self {
+    pub fn new(mesh: &Mesh, instance_count: isize) -> Self {
         unsafe {
             let mut id = 0;
             let mut index: u32 = 0;
@@ -31,7 +30,7 @@ impl VertexArray {
                 );
                 index += 1;
             }
-            let instanced_buffer = VertexBuffer::instanced::<Mat4>(8000);
+            let instanced_buffer = VertexBuffer::instanced::<Mat4>(instance_count);
             instanced_buffer.bind();
             for i in 0..4 {
                 gl::EnableVertexAttribArray(index);
@@ -48,7 +47,6 @@ impl VertexArray {
             }
 
             Self {
-                index,
                 id,
                 index_size: mesh.index_buffer.count,
                 instanced_buffer,

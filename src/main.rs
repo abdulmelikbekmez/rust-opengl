@@ -10,7 +10,6 @@ mod entity;
 mod key;
 mod renderer;
 mod scene;
-mod shader;
 mod transform;
 
 struct MyApp {
@@ -19,9 +18,9 @@ struct MyApp {
 }
 impl Application for MyApp {
     fn new() -> Self {
-        let renderer = Renderer::new();
+        let renderer = Renderer::cube();
         let mut scene = Scene::new();
-        scene.add_static_entities(20);
+        scene.add_static_entities(30);
         Self { renderer, scene }
     }
 

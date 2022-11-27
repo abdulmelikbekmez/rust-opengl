@@ -1,11 +1,12 @@
 use glam::Mat4;
 
-use crate::{application::Window, scene::Scene, shader::ShaderProgram};
+use crate::{application::Window, scene::Scene};
 
-use self::{mesh::Mesh, vertex_array::VertexArray};
+use self::{mesh::Mesh, shader::ShaderProgram, vertex_array::VertexArray};
 
 mod index_buffer;
 mod mesh;
+mod shader;
 mod vertex_array;
 mod vertex_buffer;
 
@@ -18,11 +19,11 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    const MAX_COUNT: isize = 8000;
+    const MAX_COUNT: isize = (30 as isize).pow(3);
 
-    pub fn new() -> Self {
+    pub fn cube() -> Self {
         let mesh = Mesh::cube();
-        let vao = VertexArray::new(&mesh);
+        let vao = VertexArray::new(&mesh, Self::MAX_COUNT);
         let shader = ShaderProgram::new(
             include_str!("../resources/vertex.glsl"),
             include_str!("../resources/fragment.glsl"),
@@ -70,12 +71,7 @@ impl Renderer {
             let data = e.get_transform().get_matrix().to_cols_array();
             let byte_length = std::mem::size_of_val(&data) as isize;
             unsafe {
-                gl::BufferSubData(
-                    gl::ARRAY_BUFFER,
-                    index,
-                    byte_length,
-                    data.as_ptr() as *const _,
-                );
+                gl::BufferSubData(gl::ARRAY_BUFFER, index, byte_length, data.as_ptr().cast());
             }
             count += 1;
             index += byte_length;
@@ -84,7 +80,6 @@ impl Renderer {
         let view_matrix = scene.get_camera().get_matrix();
         self.shader.set_mat4("view", &view_matrix);
 
-        // TODO: get window width and height
         let aspect_ratio = window.width / window.height;
         let projection = Mat4::perspective_rh((45 as f32).to_radians(), aspect_ratio, 0.1, 1000.);
         self.shader.set_mat4("projection", &projection);

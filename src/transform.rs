@@ -23,6 +23,7 @@ impl Rotation {
         }
     }
 
+    #[inline]
     pub fn get_rotation(&self) -> Quat {
         Quat::from_axis_angle(self.direction, self.angle)
     }
