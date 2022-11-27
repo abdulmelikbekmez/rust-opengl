@@ -14,6 +14,11 @@ impl Entity {
     }
 
     #[inline]
+    pub fn get_mut_transform(&mut self) -> &mut Transform {
+        &mut self.transform
+    }
+
+    #[inline]
     pub fn get_transform(&self) -> &Transform {
         &self.transform
     }

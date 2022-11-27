@@ -19,7 +19,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    const MAX_COUNT: isize = (30 as isize).pow(3);
+    const MAX_COUNT: isize = (100 as isize).pow(3);
 
     pub fn cube() -> Self {
         let mesh = Mesh::cube();
@@ -60,22 +60,36 @@ impl Renderer {
         }
 
         let mut count = self.count as i32;
-        let mut index = self.last_static_index;
-        for e in scene.get_dynamic_entities() {
-            let data = e.get_transform().get_matrix().to_cols_array();
-            let byte_length = std::mem::size_of_val(&data) as isize;
+        let data: Vec<_> = scene
+            .get_dynamic_entities()
+            .iter()
+            .flat_map(|e| {
+                count += 1;
+                e.get_transform().get_matrix().to_cols_array()
+            })
+            .collect();
+
+        let total_byte_length = (std::mem::size_of::<f32>() * data.len()) as isize;
+        if data.len() > 0 {
             unsafe {
-                gl::BufferSubData(gl::ARRAY_BUFFER, index, byte_length, data.as_ptr().cast());
+                gl::BufferSubData(
+                    gl::ARRAY_BUFFER,
+                    self.last_static_index,
+                    total_byte_length,
+                    data.as_ptr() as *const _,
+                );
             }
-            count += 1;
-            index += byte_length;
         }
 
         let view_matrix = scene.get_camera().get_matrix();
         self.shader.set_mat4("view", &view_matrix);
 
-        let aspect_ratio = window.width / window.height;
-        let projection = Mat4::perspective_rh((45 as f32).to_radians(), aspect_ratio, 0.1, 1000.);
+        let projection = Mat4::perspective_rh(
+            (45 as f32).to_radians(),
+            window.get_aspect_ratio(),
+            0.1,
+            1000.,
+        );
         self.shader.set_mat4("projection", &projection);
         let index_size = self.vao.get_index_size();
         unsafe {

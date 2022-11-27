@@ -20,12 +20,14 @@ impl Application for MyApp {
     fn new() -> Self {
         let renderer = Renderer::cube();
         let mut scene = Scene::new();
-        scene.add_static_entities(30);
+        // scene.add_static_entities(100);
+        scene.add_dynamic_entities(50);
         Self { renderer, scene }
     }
 
     fn update(&mut self, key_state: &KeyboardState, _: &Window) {
         self.scene.get_camera().handle_input(key_state);
+        self.scene.update();
     }
 
     fn draw(&mut self, window: &Window) {

@@ -38,6 +38,10 @@ impl Transform {
         }
     }
 
+    pub fn update_pos(&mut self, dif: Vec3) {
+        self.position += dif;
+    }
+
     pub fn with_pos(position: Vec3) -> Self {
         Self {
             position,

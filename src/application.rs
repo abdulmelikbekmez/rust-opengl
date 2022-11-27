@@ -15,6 +15,13 @@ pub struct Window {
     pub height: f32,
 }
 
+impl Window {
+    #[inline]
+    pub fn get_aspect_ratio(&self) -> f32 {
+        self.width / self.height
+    }
+}
+
 impl AppBuilder {
     pub fn build<T: Application + 'static>(mut w: Window) {
         let event_loop = glutin::event_loop::EventLoop::new();
