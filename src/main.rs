@@ -20,8 +20,7 @@ impl Application for MyApp {
     fn new() -> Self {
         let renderer = Renderer::cube();
         let mut scene = Scene::new();
-        // scene.add_static_entities(100);
-        scene.add_dynamic_entities(50);
+        scene.add_entities(80, true);
         Self { renderer, scene }
     }
 
@@ -43,8 +42,8 @@ impl Application for MyApp {
 
 fn main() {
     let w = Window {
-        width: 800.,
-        height: 600.,
+        width: 1400.,
+        height: 900.,
     };
     AppBuilder::build::<MyApp>(w);
 }

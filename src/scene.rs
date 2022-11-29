@@ -28,7 +28,7 @@ impl Scene {
         }
     }
 
-    pub fn add_dynamic_entities(&mut self, count: i32) {
+    pub fn add_entities(&mut self, count: i32, is_static: bool) {
         let padding = 5;
         for i in -(count / 2)..(count / 2) {
             for j in -(count / 2)..(count / 2) {
@@ -38,23 +38,11 @@ impl Scene {
                         (j * padding) as f32,
                         (k * padding) as f32,
                     );
-                    self.dynamic_entity_list.push(Entity::new(pos));
-                }
-            }
-        }
-    }
-
-    pub fn add_static_entities(&mut self, count: i32) {
-        let padding = 5;
-        for i in -(count / 2)..(count / 2) {
-            for j in -(count / 2)..(count / 2) {
-                for k in -(count / 2)..(count / 2) {
-                    let pos = Vec3::new(
-                        (i * padding) as f32,
-                        (j * padding) as f32,
-                        (k * padding) as f32,
-                    );
-                    self.static_entity_list.push(Entity::new(pos));
+                    if is_static {
+                        self.static_entity_list.push(Entity::new(pos));
+                    } else {
+                        self.dynamic_entity_list.push(Entity::new(pos));
+                    }
                 }
             }
         }

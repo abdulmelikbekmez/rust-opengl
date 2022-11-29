@@ -11,7 +11,7 @@ mod vertex_array;
 mod vertex_buffer;
 
 pub struct Renderer {
-    count: usize,
+    count: i32,
     last_static_index: isize,
     shader: ShaderProgram,
     vao: VertexArray,
@@ -38,28 +38,41 @@ impl Renderer {
         }
     }
 
-    pub fn draw(&mut self, scene: &mut Scene, window: &Window) {
-        self.vao.bind();
-        self.shader.activate();
-        let buffer = self.vao.get_instanced_buffer();
-        buffer.bind();
-
-        while let Some(e) = scene.get_static_entities().pop() {
-            let data = e.get_transform().get_matrix().to_cols_array();
-            let byte_length = std::mem::size_of_val(&data) as isize;
-            unsafe {
-                gl::BufferSubData(
-                    gl::ARRAY_BUFFER,
-                    self.last_static_index,
-                    byte_length,
-                    data.as_ptr() as *const _,
-                );
-            }
-            self.count += 1;
-            self.last_static_index += byte_length;
+    /// Ensure that related vertex buffer is binded!!
+    /// Other vise this function may be work unexpectedly
+    fn set_data(&mut self, data: &[f32], update: bool) {
+        let byte_length = (data.len() * std::mem::size_of::<f32>()) as isize;
+        unsafe {
+            gl::BufferSubData(
+                gl::ARRAY_BUFFER,
+                self.last_static_index,
+                byte_length,
+                data.as_ptr().cast(),
+            );
         }
 
-        let mut count = self.count as i32;
+        if update {
+            self.last_static_index += byte_length;
+        }
+    }
+
+    pub fn draw(&mut self, scene: &mut Scene, window: &Window) {
+        self.vao.bind();
+        self.vao.get_instanced_buffer().bind();
+
+        let data: Vec<_> = scene
+            .get_static_entities()
+            .iter()
+            .flat_map(|e| {
+                self.count += 1;
+                e.get_transform().get_matrix().to_cols_array()
+            })
+            .collect();
+
+        self.set_data(&data, true);
+        scene.get_static_entities().clear();
+
+        let mut count = self.count;
         let data: Vec<_> = scene
             .get_dynamic_entities()
             .iter()
@@ -69,18 +82,9 @@ impl Renderer {
             })
             .collect();
 
-        let total_byte_length = (std::mem::size_of::<f32>() * data.len()) as isize;
-        if data.len() > 0 {
-            unsafe {
-                gl::BufferSubData(
-                    gl::ARRAY_BUFFER,
-                    self.last_static_index,
-                    total_byte_length,
-                    data.as_ptr() as *const _,
-                );
-            }
-        }
+        self.set_data(&data, false);
 
+        self.shader.activate();
         let view_matrix = scene.get_camera().get_matrix();
         self.shader.set_mat4("view", &view_matrix);
 
@@ -97,7 +101,7 @@ impl Renderer {
                 gl::TRIANGLES,
                 index_size,
                 gl::UNSIGNED_INT,
-                0 as *const _,
+                std::ptr::null(),
                 count,
             )
         }

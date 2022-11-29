@@ -18,7 +18,7 @@ impl VertexBuffer {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 std::mem::size_of_val(data) as isize,
-                data.as_ptr() as *const _,
+                data.as_ptr().cast(),
                 gl::STATIC_DRAW,
             );
         }
@@ -38,7 +38,7 @@ impl VertexBuffer {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 element_count * std::mem::size_of::<T>() as isize,
-                0 as *const _,
+                std::ptr::null(),
                 gl::DYNAMIC_DRAW,
             );
 
@@ -61,6 +61,7 @@ impl VertexBuffer {
         return self.byte_length;
     }
 
+    #[inline]
     pub fn bind(&self) {
         unsafe {
             if self.id != BINDED_ID {

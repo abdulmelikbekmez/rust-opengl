@@ -3,6 +3,8 @@ use glam::Mat4;
 
 use super::{mesh::Mesh, vertex_buffer::VertexBuffer};
 
+static mut BINDED_ID: GLuint = 0;
+
 pub struct VertexArray {
     id: GLuint,
     index_size: i32,
@@ -16,6 +18,7 @@ impl VertexArray {
             let mut index: u32 = 0;
             gl::CreateVertexArrays(1, &mut id);
             gl::BindVertexArray(id);
+            BINDED_ID = id;
             mesh.index_buffer.bind();
             for buffer in mesh.vb_list.iter() {
                 buffer.bind();
@@ -88,7 +91,10 @@ impl VertexArray {
     #[inline]
     pub fn bind(&self) {
         unsafe {
-            gl::BindVertexArray(self.id);
+            if BINDED_ID != self.id {
+                gl::BindVertexArray(self.id);
+                BINDED_ID = self.id;
+            }
         }
     }
 }

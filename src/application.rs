@@ -1,6 +1,7 @@
 use std::ffi::CString;
 
 use glutin::{
+    dpi::LogicalSize,
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
     window::CursorGrabMode,
@@ -26,8 +27,9 @@ impl AppBuilder {
     pub fn build<T: Application + 'static>(mut w: Window) {
         let event_loop = glutin::event_loop::EventLoop::new();
 
-        let window_builder =
-            glutin::window::WindowBuilder::new().with_title("hello opengl with rust");
+        let window_builder = glutin::window::WindowBuilder::new()
+            .with_title("hello opengl with rust")
+            .with_inner_size(LogicalSize::new(w.width, w.height));
         // It is essential to make the context current before calling `gl::load_with`.
         let gl_context = unsafe {
             glutin::ContextBuilder::new()
