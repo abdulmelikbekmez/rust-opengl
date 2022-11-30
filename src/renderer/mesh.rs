@@ -37,9 +37,14 @@ const ELEMENT_DATA: [GLuint; 36] = [
     3, 2, 6, 6, 7, 3,
 ];
 
+pub enum MeshType {
+    CUBE,
+}
+
 pub struct Mesh {
     pub vb_list: Vec<VertexBuffer>,
     pub index_buffer: IndexBuffer,
+    pub _type: MeshType,
 }
 
 impl Mesh {
@@ -47,14 +52,16 @@ impl Mesh {
         pos_data: &[[f32; N]],
         color_data: &[[f32; N]],
         index_data: &[GLuint],
+        _type: MeshType,
     ) -> Self {
         Self {
             vb_list: vec![VertexBuffer::new(pos_data), VertexBuffer::new(color_data)],
             index_buffer: IndexBuffer::new(index_data),
+            _type,
         }
     }
 
     pub fn cube() -> Self {
-        Self::new(&POS_DATA, &COLOR_DATA, &ELEMENT_DATA)
+        Self::new(&POS_DATA, &COLOR_DATA, &ELEMENT_DATA, MeshType::CUBE)
     }
 }

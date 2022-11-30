@@ -10,3 +10,4 @@ authors = ["Abdulmelik Bekmez"]
 glutin = "0.29.1"
 gl = "*"
 glam = "0.21.3"
+# tokio = {version = "1" , features = ["full"]}

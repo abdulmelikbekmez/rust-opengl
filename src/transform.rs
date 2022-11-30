@@ -29,23 +29,41 @@ impl Rotation {
     }
 }
 
-impl Transform {
-    pub fn new() -> Self {
+impl Default for Transform {
+    fn default() -> Self {
         Self {
             position: Vec3::ZERO,
             scale: Vec3::ONE,
             rotation: Rotation::new(),
         }
     }
+}
 
+impl Transform {
+    pub fn with_pos(position: Vec3) -> Self {
+        Self {
+            position,
+            scale: Vec3::ONE * 0.3,
+            rotation: Rotation::new(),
+        }
+    }
+
+    #[inline]
+    pub fn get_pos(&self) -> Vec3 {
+        self.position
+    }
     pub fn update_pos(&mut self, dif: Vec3) {
         self.position += dif;
     }
 
-    pub fn with_pos(position: Vec3) -> Self {
+    pub fn set_pos(&mut self, position: Vec3) {
+        self.position = position;
+    }
+
+    pub fn with_pos_scale(position: Vec3, scale: Vec3) -> Self {
         Self {
             position,
-            scale: Vec3::ONE,
+            scale,
             rotation: Rotation::new(),
         }
     }

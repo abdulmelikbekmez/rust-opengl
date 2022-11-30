@@ -7,7 +7,7 @@ use glutin::{
     window::CursorGrabMode,
 };
 
-use crate::key::KeyboardState;
+use crate::{camera::Camera, key::KeyboardState, renderer::Renderer};
 
 pub struct AppBuilder;
 
@@ -55,6 +55,7 @@ impl AppBuilder {
 
         let mut app = T::new();
         let mut key_state = KeyboardState::new();
+        let mut renderer = Renderer::cube();
 
         unsafe {
             gl::ClearColor(0., 0., 0., 1.);
@@ -103,7 +104,8 @@ impl AppBuilder {
                     unsafe {
                         // Clear the screen to black
                         gl::Clear(gl::DEPTH_BUFFER_BIT | gl::COLOR_BUFFER_BIT);
-                        app.draw(&w);
+                        app.draw(&w, &mut renderer);
+                        renderer.draw(&w, app.get_camera());
                     }
                     gl_context.swap_buffers().unwrap();
                 }
@@ -116,7 +118,8 @@ impl AppBuilder {
 pub trait Application {
     fn new() -> Self;
     fn update(&mut self, key_state: &KeyboardState, window: &Window);
-    fn draw(&mut self, window: &Window);
+    fn draw(&mut self, window: &Window, renderer: &mut Renderer);
     fn event(&mut self);
     fn on_mouse_move(&mut self, delta: &(f64, f64));
+    fn get_camera(&self) -> &Camera;
 }
