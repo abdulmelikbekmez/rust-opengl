@@ -14,8 +14,8 @@ pub struct Camera {
 }
 
 impl Camera {
-    const SENSIVITY: f64 = 0.5;
-    const SPEED: f32 = 0.05;
+    const SENSIVITY: f64 = 0.1;
+    const SPEED: f32 = 0.01;
     pub fn new() -> Self {
         Self {
             position: Vec3 {

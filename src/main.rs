@@ -1,6 +1,7 @@
 use application::Application;
 use application::*;
 use camera::Camera;
+use glutin::event::MouseScrollDelta;
 use key::KeyboardState;
 use renderer::Renderer;
 use scene::Scene;
@@ -19,9 +20,9 @@ struct MyApp {
 }
 impl Application for MyApp {
     fn new() -> Self {
-        let mut scene = Scene::new();
-        scene.add_entities(50, true);
-        Self { scene }
+        Self {
+            scene: Scene::new(),
+        }
     }
 
     fn update(&mut self, key_state: &KeyboardState, window: &Window) {
@@ -36,6 +37,13 @@ impl Application for MyApp {
 
     fn on_mouse_move(&mut self, delta: &(f64, f64)) {
         self.scene.get_mut_camera().update(delta);
+    }
+    fn on_mouse_wheel(&mut self, delta: &MouseScrollDelta) {
+        self.scene.on_mouse_wheel(delta);
+    }
+
+    fn on_mouse_click(&mut self) {
+        self.scene.on_mouse_click()
     }
 
     fn get_camera(&self) -> &Camera {

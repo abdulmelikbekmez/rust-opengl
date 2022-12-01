@@ -9,6 +9,9 @@ pub enum Message {
         received_list: Vec<u32>,
         payload: Vec<Payload>,
     },
+    TASK {
+        target: Vec3,
+    },
 }
 
 impl Message {}

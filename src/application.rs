@@ -2,7 +2,7 @@ use std::ffi::CString;
 
 use glutin::{
     dpi::LogicalSize,
-    event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, MouseScrollDelta, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
     window::CursorGrabMode,
 };
@@ -76,10 +76,17 @@ impl AppBuilder {
             match event {
                 Event::LoopDestroyed => return,
                 Event::DeviceEvent { event, .. } => match event {
-                    glutin::event::DeviceEvent::MouseMotion { delta } => app.on_mouse_move(&delta),
+                    glutin::event::DeviceEvent::MouseMotion { delta } => {
+                        app.on_mouse_move(&delta);
+                    }
                     _ => (),
                 },
                 Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::MouseInput { state, button, .. }
+                        if state == ElementState::Pressed =>
+                    {
+                        app.on_mouse_click();
+                    }
                     WindowEvent::KeyboardInput {
                         input:
                             KeyboardInput {
@@ -98,6 +105,9 @@ impl AppBuilder {
                         gl_context.resize(size);
                         gl::Viewport(0, 0, size.width as i32, size.height as i32);
                     },
+                    WindowEvent::MouseWheel { delta, .. } => {
+                        app.on_mouse_wheel(&delta);
+                    }
                     _ => (),
                 },
                 Event::RedrawRequested(_) => {
@@ -121,5 +131,7 @@ pub trait Application {
     fn draw(&mut self, window: &Window, renderer: &mut Renderer);
     fn event(&mut self);
     fn on_mouse_move(&mut self, delta: &(f64, f64));
+    fn on_mouse_wheel(&mut self, delta: &MouseScrollDelta);
+    fn on_mouse_click(&mut self);
     fn get_camera(&self) -> &Camera;
 }

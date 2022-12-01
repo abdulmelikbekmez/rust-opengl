@@ -1,4 +1,5 @@
 use glam::Vec3;
+use glutin::event::MouseScrollDelta;
 
 use crate::{
     application::Window,
@@ -12,16 +13,18 @@ use crate::{
 pub struct Scene {
     camera: Camera,
     entity_list: Vec<Entity>,
-    tmp: Entity,
+    target: Option<Entity>,
+    cursor: Entity,
+    cursor_dist: f32,
     swarm: Swarm,
 }
 
 impl Scene {
     pub fn new() -> Self {
         let camera = Camera::new();
-        let mut swarm = Swarm::new(10);
+        let mut swarm = Swarm::new(3);
         let entity_list = vec![Entity::new_scale(
-            Vec3::default(),
+            Vec3::new(0., -20., 0.),
             Vec3::new(500., 0.2, 500.),
             true,
             MeshType::CUBE,
@@ -31,24 +34,29 @@ impl Scene {
         Self {
             camera,
             entity_list,
-            tmp: Entity::new_scale(Vec3::default(), Vec3::ONE * 3., false, MeshType::CUBE),
+            cursor: Entity::new(Vec3::default(), false, MeshType::CUBE),
+            cursor_dist: 10.,
+            target: None,
             swarm,
         }
     }
 
     pub fn draw(&mut self, _: &Window, renderer: &mut Renderer) {
-        // for e in self.get_mut_entities() {
-        //     e.draw(renderer);
-        // }
-        self.tmp.draw(renderer);
+        for e in self.entity_list.iter_mut() {
+            e.draw(renderer);
+        }
+        self.cursor.draw(renderer);
         self.swarm.draw(renderer);
+        for i in self.target.iter_mut() {
+            i.draw(renderer);
+        }
     }
 
     pub fn update(&mut self, key_state: &KeyboardState, _: &Window) {
         self.camera.handle_input(key_state);
-        self.tmp
+        self.cursor
             .get_mut_transform()
-            .set_pos(self.camera.position + self.camera.direction * 100.);
+            .set_pos(self.camera.position + self.camera.direction * self.cursor_dist);
         self.swarm.update();
     }
 
@@ -69,6 +77,22 @@ impl Scene {
         }
     }
 
+    pub fn on_mouse_click(&mut self) {
+        let pos = self.cursor.get_transform().get_pos();
+        self.target
+            .get_or_insert_with(|| Entity::new(pos, false, MeshType::CUBE))
+            .get_mut_transform()
+            .set_pos(pos);
+        self.swarm.set_target(pos);
+    }
+
+    pub fn on_mouse_wheel(&mut self, delta: &MouseScrollDelta) {
+        match delta {
+            MouseScrollDelta::LineDelta(_, y) => self.cursor_dist += y,
+            MouseScrollDelta::PixelDelta(_) => todo!(),
+        }
+    }
+
     #[inline]
     pub fn get_mut_camera(&mut self) -> &mut Camera {
         &mut self.camera
@@ -77,15 +101,5 @@ impl Scene {
     #[inline]
     pub fn get_camera(&self) -> &Camera {
         &self.camera
-    }
-
-    #[inline]
-    pub fn get_entities(&self) -> &Vec<Entity> {
-        &self.entity_list
-    }
-
-    #[inline]
-    pub fn get_mut_entities(&mut self) -> &mut Vec<Entity> {
-        &mut self.entity_list
     }
 }
