@@ -22,7 +22,7 @@ pub struct Scene {
 impl Scene {
     pub fn new() -> Self {
         let camera = Camera::new();
-        let mut swarm = Swarm::new(3);
+        let mut swarm = Swarm::new(2);
         let entity_list = vec![Entity::new_scale(
             Vec3::new(0., -20., 0.),
             Vec3::new(500., 0.2, 500.),
@@ -89,7 +89,7 @@ impl Scene {
     pub fn on_mouse_wheel(&mut self, delta: &MouseScrollDelta) {
         match delta {
             MouseScrollDelta::LineDelta(_, y) => self.cursor_dist += y,
-            MouseScrollDelta::PixelDelta(_) => todo!(),
+            _ => return,
         }
     }
 

@@ -71,7 +71,7 @@ impl Swarm {
                         let mut agent = a.lock().unwrap();
                         agent.on_received(message);
                     }
-                    std::thread::sleep(Duration::from_millis(5));
+                    std::thread::sleep(Duration::from_millis(1));
                 });
             });
             std::thread::spawn(move || loop {
@@ -79,7 +79,7 @@ impl Swarm {
                     let agent = b.lock().unwrap();
                     agent.send_update_message();
                 }
-                std::thread::sleep(Duration::from_millis(100));
+                std::thread::sleep(Duration::from_millis(200));
             });
         }
         println!("all agents started!!");
