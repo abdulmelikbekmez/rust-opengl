@@ -52,9 +52,16 @@ impl Swarm {
     }
 
     pub fn set_target(&mut self, target: Vec3) {
+        println!("main set task message with target => {}", target);
         for agent in self.agents.iter_mut() {
             agent.tx.send(Message::TASK { target }).unwrap();
-            println!("main set task message with target => {}", target);
+        }
+    }
+
+    pub fn clear_target(&mut self) {
+        println!("main clear task");
+        for agent in self.agents.iter_mut() {
+            agent.tx.send(Message::CLEARTASK).unwrap();
         }
     }
 
@@ -65,13 +72,14 @@ impl Swarm {
             let rx = agent.rx.take();
             std::thread::spawn(move || {
                 println!("Agent initialized");
-                rx.map(|receiver| loop {
-                    let message = receiver.recv().unwrap();
-                    {
-                        let mut agent = a.lock().unwrap();
-                        agent.on_received(message);
+                rx.map(|receiver| {
+                    for message in receiver.iter() {
+                        {
+                            let mut agent = a.lock().unwrap();
+                            agent.on_received(message);
+                        }
+                        std::thread::sleep(Duration::from_millis(10));
                     }
-                    std::thread::sleep(Duration::from_millis(1));
                 });
             });
             std::thread::spawn(move || loop {

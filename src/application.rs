@@ -2,7 +2,10 @@ use std::ffi::CString;
 
 use glutin::{
     dpi::LogicalSize,
-    event::{ElementState, Event, KeyboardInput, MouseScrollDelta, VirtualKeyCode, WindowEvent},
+    event::{
+        ElementState, Event, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode,
+        WindowEvent,
+    },
     event_loop::ControlFlow,
     window::CursorGrabMode,
 };
@@ -85,7 +88,7 @@ impl AppBuilder {
                     WindowEvent::MouseInput { state, button, .. }
                         if state == ElementState::Pressed =>
                     {
-                        app.on_mouse_click();
+                        app.on_mouse_click(&button);
                     }
                     WindowEvent::KeyboardInput {
                         input:
@@ -132,6 +135,6 @@ pub trait Application {
     fn event(&mut self);
     fn on_mouse_move(&mut self, delta: &(f64, f64));
     fn on_mouse_wheel(&mut self, delta: &MouseScrollDelta);
-    fn on_mouse_click(&mut self);
+    fn on_mouse_click(&mut self, button: &MouseButton);
     fn get_camera(&self) -> &Camera;
 }

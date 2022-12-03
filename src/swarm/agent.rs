@@ -39,7 +39,7 @@ struct Table {
 impl Agent {
     const PERSEPTON_RADIUS: f32 = 10.;
     const MAX_SPEED: f32 = 0.001;
-    const MAX_ACCELERATION: f32 = 0.005;
+    const MAX_ACCELERATION: f32 = 0.15;
     pub fn new(pos: Vec3) -> SharedAgent {
         let id = unsafe {
             let tmp = ID;
@@ -75,6 +75,10 @@ impl Agent {
         self.acceleration += self.get_cohesion_force() * 1.;
         self.acceleration += self.get_seperation_force() * 100.;
         self.acceleration += self.get_target_force() * 0.01;
+
+        // if self.target.is_none() {
+        //     println!("{} acc => {}", self.id, self.acceleration.length());
+        // }
 
         self.velocity += self.acceleration;
 
@@ -117,8 +121,13 @@ impl Agent {
 
     pub fn on_received(&mut self, msg: Message) {
         match msg {
+            Message::CLEARTASK => {
+                self.target = None;
+                println!("{} clear task received", self.id);
+            }
+
             Message::TASK { target } => {
-                println!(" {} new target received {}", self.id, target);
+                println!("{} new target received {}", self.id, target);
                 self.target = Some(target);
             }
             Message::UPDATE {
@@ -126,12 +135,17 @@ impl Agent {
                 mut received_list,
                 mut payload,
             } if from != self.id => {
+                println!("{} update received", self.id);
                 // Update velocity and positions
                 for p in payload.iter() {
-                    self.table.get_mut(&p.id).map(|table| {
+                    if let Some(table) = self.table.get_mut(&p.id) {
                         table.position = p.position;
                         table.velocity = p.velocity;
-                    });
+                    }
+                    // self.table.get_mut(&p.id).map(|table| {
+                    //     table.position = p.position;
+                    //     table.velocity = p.velocity;
+                    // });
                 }
 
                 payload.push(Payload::from_agent(self));
@@ -141,7 +155,7 @@ impl Agent {
                     .iter()
                     .filter(|(id, table)| {
                         !received_list.contains(id)
-                            && self.transform.get_pos().distance(table.position)
+                            && (self.transform.get_pos() * table.position).length()
                                 < Self::PERSEPTON_RADIUS
                     })
                     .map(|(&id, _)| id)
@@ -152,7 +166,7 @@ impl Agent {
                     table
                         .sender
                         .send(Message::UPDATE {
-                            from: self.id.clone(),
+                            from: self.id,
                             received_list: received_list.clone(),
                             payload: payload.clone(),
                         })
@@ -231,13 +245,7 @@ impl Agent {
     fn get_target_force(&self) -> Vec3 {
         self.target.map_or(Vec3::ZERO, |x| {
             let desired = x - self.transform.get_pos();
-            let mut steering = desired - self.velocity;
-            // if steering.length() > Self::MAX_ACCELERATION {
-            //     steering
-            //         .try_normalize()
-            //         .map(|n| steering = n * Self::MAX_ACCELERATION);
-            // }
-            steering
+            desired - self.velocity
         })
     }
 
@@ -270,7 +278,7 @@ impl Agent {
         //         .try_normalize()
         //         .map(|n| force = n * Self::MAX_ACCELERATION);
         // }
-        return force.clamp_length_max(Self::MAX_ACCELERATION);
+        force.clamp_length_max(Self::MAX_ACCELERATION)
     }
 }
 

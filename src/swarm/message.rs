@@ -12,6 +12,7 @@ pub enum Message {
     TASK {
         target: Vec3,
     },
+    CLEARTASK,
 }
 
 impl Message {}

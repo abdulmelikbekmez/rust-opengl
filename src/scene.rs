@@ -1,5 +1,5 @@
 use glam::Vec3;
-use glutin::event::MouseScrollDelta;
+use glutin::event::{MouseButton, MouseScrollDelta};
 
 use crate::{
     application::Window,
@@ -22,7 +22,7 @@ pub struct Scene {
 impl Scene {
     pub fn new() -> Self {
         let camera = Camera::new();
-        let mut swarm = Swarm::new(2);
+        let mut swarm = Swarm::new(4);
         let entity_list = vec![Entity::new_scale(
             Vec3::new(0., -20., 0.),
             Vec3::new(500., 0.2, 500.),
@@ -77,13 +77,23 @@ impl Scene {
         }
     }
 
-    pub fn on_mouse_click(&mut self) {
-        let pos = self.cursor.get_transform().get_pos();
-        self.target
-            .get_or_insert_with(|| Entity::new(pos, false, MeshType::CUBE))
-            .get_mut_transform()
-            .set_pos(pos);
-        self.swarm.set_target(pos);
+    pub fn on_mouse_click(&mut self, button: &MouseButton) {
+        match button {
+            MouseButton::Left => {
+                let pos = self.cursor.get_transform().get_pos();
+                self.target
+                    .get_or_insert_with(|| Entity::new(pos, false, MeshType::CUBE))
+                    .get_mut_transform()
+                    .set_pos(pos);
+                self.swarm.set_target(pos);
+            }
+            MouseButton::Right => {
+                self.swarm.clear_target();
+                self.target = None;
+            }
+            MouseButton::Middle => todo!(),
+            MouseButton::Other(_) => todo!(),
+        }
     }
 
     pub fn on_mouse_wheel(&mut self, delta: &MouseScrollDelta) {

@@ -1,7 +1,7 @@
 use application::Application;
 use application::*;
 use camera::Camera;
-use glutin::event::MouseScrollDelta;
+use glutin::event::{MouseButton, MouseScrollDelta};
 use key::KeyboardState;
 use renderer::Renderer;
 use scene::Scene;
@@ -42,8 +42,8 @@ impl Application for MyApp {
         self.scene.on_mouse_wheel(delta);
     }
 
-    fn on_mouse_click(&mut self) {
-        self.scene.on_mouse_click()
+    fn on_mouse_click(&mut self, button: &MouseButton) {
+        self.scene.on_mouse_click(button);
     }
 
     fn get_camera(&self) -> &Camera {
