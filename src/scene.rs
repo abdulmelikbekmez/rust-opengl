@@ -49,17 +49,17 @@ impl Scene {
     }
 
     #[inline]
-    pub fn get_camera(&mut self) -> &mut Camera {
+    pub fn get_mut_camera(&mut self) -> &mut Camera {
         &mut self.camera
     }
 
     #[inline]
-    pub fn get_static_entities(&mut self) -> &mut Vec<Entity> {
+    pub fn get_mut_static_entities(&mut self) -> &mut Vec<Entity> {
         &mut self.static_entity_list
     }
 
     #[inline]
-    pub fn get_dynamic_entities(&mut self) -> &mut Vec<Entity> {
-        &mut self.dynamic_entity_list
+    pub fn get_dynamic_entities(&mut self) -> &Vec<Entity> {
+        &self.dynamic_entity_list
     }
 }

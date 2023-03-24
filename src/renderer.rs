@@ -1,14 +1,16 @@
+use std::time::Instant;
+
 use glam::Mat4;
 
-use crate::{application::Window, scene::Scene};
+use crate::{application::Window, glcall, scene::Scene};
 
 use self::{mesh::Mesh, shader::ShaderProgram, vertex_array::VertexArray};
 
 mod index_buffer;
 mod mesh;
-mod shader;
+pub mod shader;
 mod vertex_array;
-mod vertex_buffer;
+pub mod vertex_buffer;
 
 pub struct Renderer {
     count: i32,
@@ -16,17 +18,25 @@ pub struct Renderer {
     shader: ShaderProgram,
     vao: VertexArray,
     _mesh: Mesh,
+    projection: Mat4,
 }
 
 impl Renderer {
     const MAX_COUNT: isize = (100 as isize).pow(3);
 
-    pub fn cube() -> Self {
+    pub fn cube(window: &Window) -> Self {
         let mesh = Mesh::cube();
         let vao = VertexArray::new(&mesh, Self::MAX_COUNT);
         let shader = ShaderProgram::new(
             include_str!("../resources/vertex.glsl"),
             include_str!("../resources/fragment.glsl"),
+        );
+
+        let projection = Mat4::perspective_rh(
+            (45 as f32).to_radians(),
+            window.get_aspect_ratio(),
+            0.1,
+            1000.,
         );
 
         Self {
@@ -35,75 +45,62 @@ impl Renderer {
             shader,
             vao,
             _mesh: mesh,
+            projection,
         }
     }
 
-    /// Ensure that related vertex buffer is binded!!
-    /// Other vise this function may be work unexpectedly
-    fn set_data(&mut self, data: &[f32], update: bool) {
-        let byte_length = (data.len() * std::mem::size_of::<f32>()) as isize;
-        unsafe {
-            gl::BufferSubData(
-                gl::ARRAY_BUFFER,
-                self.last_static_index,
-                byte_length,
-                data.as_ptr().cast(),
-            );
-        }
-
-        if update {
-            self.last_static_index += byte_length;
-        }
-    }
-
-    pub fn draw(&mut self, scene: &mut Scene, window: &Window) {
-        self.vao.bind();
-        self.vao.get_instanced_buffer().bind();
-
-        let data: Vec<_> = scene
-            .get_static_entities()
-            .iter()
-            .flat_map(|e| {
-                self.count += 1;
-                e.get_transform().get_matrix().to_cols_array()
-            })
-            .collect();
-
-        self.set_data(&data, true);
-        scene.get_static_entities().clear();
-
-        let mut count = self.count;
-        let data: Vec<_> = scene
-            .get_dynamic_entities()
-            .iter()
-            .flat_map(|e| {
-                count += 1;
-                e.get_transform().get_matrix().to_cols_array()
-            })
-            .collect();
-
-        self.set_data(&data, false);
-
-        self.shader.activate();
-        let view_matrix = scene.get_camera().get_matrix();
-        self.shader.set_mat4("view", &view_matrix);
-
-        let projection = Mat4::perspective_rh(
+    pub fn on_resize(&mut self, window: &Window) {
+        self.projection = Mat4::perspective_rh(
             (45 as f32).to_radians(),
             window.get_aspect_ratio(),
             0.1,
             1000.,
         );
-        self.shader.set_mat4("projection", &projection);
-        let index_size = self.vao.get_index_size();
+    }
+
+    pub fn draw(&mut self, scene: &mut Scene) {
+        self.vao.bind();
+
+        let data: Vec<_> = scene
+            .get_mut_static_entities()
+            .iter()
+            .map(|e| e.get_transform().get_matrix())
+            .collect();
+
+        self.count += scene.get_mut_static_entities().len() as i32;
+
+        self.last_static_index += self
+            .vao
+            .instanced_buffer
+            .set_data(&data, self.last_static_index);
+        scene.get_mut_static_entities().clear();
+
+        let mut count = self.count;
+        let t = Instant::now();
+        let data: Vec<_> = scene
+            .get_dynamic_entities()
+            .iter()
+            .map(|e| e.get_transform().get_matrix())
+            .collect();
+        count += scene.get_dynamic_entities().len() as i32;
+        println!("calculating data takes {} micro", t.elapsed().as_micros());
+
+        self.vao
+            .instanced_buffer
+            .set_data(&data, self.last_static_index);
+
+        self.shader.activate();
+        let view_matrix = scene.get_mut_camera().get_matrix();
+        self.shader.set_mat4("view", &view_matrix);
+        self.shader.set_mat4("projection", &self.projection);
         unsafe {
-            gl::DrawElementsInstanced(
+            glcall!(gl::DrawElementsInstanced(
                 gl::TRIANGLES,
-                index_size,
+                self.vao.get_index_size(),
                 gl::UNSIGNED_INT,
                 std::ptr::null(),
                 count,
-            )
+            ));
         }
     }
 }

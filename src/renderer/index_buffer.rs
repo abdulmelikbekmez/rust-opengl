@@ -5,19 +5,15 @@ pub struct IndexBuffer {
     pub count: i32,
 }
 
-static mut BINDED_ID: GLuint = 0;
-
 impl IndexBuffer {
     pub fn new(data: &[GLuint]) -> Self {
         let mut id = 0;
         unsafe {
-            gl::GenBuffers(1, &mut id);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, id);
-            BINDED_ID = id;
-            gl::BufferData(
-                gl::ELEMENT_ARRAY_BUFFER,
+            gl::CreateBuffers(1, &mut id);
+            gl::NamedBufferData(
+                id,
                 std::mem::size_of_val(data) as isize,
-                data.as_ptr() as *const _,
+                data.as_ptr().cast(),
                 gl::STATIC_DRAW,
             );
         }
@@ -27,11 +23,9 @@ impl IndexBuffer {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn bind(&self) {
-        unsafe {
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
-        }
+    #[inline]
+    pub fn get_id(&self) -> GLuint {
+        self.id
     }
 }
 

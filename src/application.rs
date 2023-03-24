@@ -4,7 +4,6 @@ use glutin::{
     dpi::LogicalSize,
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
-    window::CursorGrabMode,
 };
 
 use crate::key::KeyboardState;
@@ -40,10 +39,10 @@ impl AppBuilder {
         };
 
         gl_context.window().set_cursor_visible(false);
-        gl_context
-            .window()
-            .set_cursor_grab(CursorGrabMode::Locked)
-            .unwrap();
+        // gl_context
+        //     .window()
+        //     .set_cursor_grab(CursorGrabMode::None)
+        //     .unwrap();
 
         gl::load_with(|ptr| gl_context.get_proc_address(ptr));
 
@@ -53,7 +52,7 @@ impl AppBuilder {
         };
         println!("{:?}", version.to_str().unwrap());
 
-        let mut app = T::new();
+        let mut app = T::new(&w);
         let mut key_state = KeyboardState::new();
 
         unsafe {
@@ -65,10 +64,9 @@ impl AppBuilder {
             // *control_flow = ControlFlow::Wait;
             if key_state.is_pressed(&VirtualKeyCode::Escape) {
                 *control_flow = ControlFlow::Exit;
-                return;
             }
 
-            app.update(&key_state, &w);
+            app.update(&key_state);
 
             gl_context.window().request_redraw();
 
@@ -103,7 +101,7 @@ impl AppBuilder {
                     unsafe {
                         // Clear the screen to black
                         gl::Clear(gl::DEPTH_BUFFER_BIT | gl::COLOR_BUFFER_BIT);
-                        app.draw(&w);
+                        app.draw();
                     }
                     gl_context.swap_buffers().unwrap();
                 }
@@ -114,9 +112,10 @@ impl AppBuilder {
 }
 
 pub trait Application {
-    fn new() -> Self;
-    fn update(&mut self, key_state: &KeyboardState, window: &Window);
-    fn draw(&mut self, window: &Window);
+    fn new(window: &Window) -> Self;
+    fn update(&mut self, key_state: &KeyboardState);
+    fn draw(&mut self);
     fn event(&mut self);
     fn on_mouse_move(&mut self, delta: &(f64, f64));
+    fn on_resize(&mut self, window: &Window);
 }

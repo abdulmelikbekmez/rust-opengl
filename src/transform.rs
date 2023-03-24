@@ -11,8 +11,8 @@ struct Rotation {
     angle: f32,
 }
 
-impl Rotation {
-    pub fn new() -> Self {
+impl Default for Rotation {
+    fn default() -> Self {
         Self {
             direction: Vec3 {
                 x: 0.,
@@ -22,22 +22,26 @@ impl Rotation {
             angle: 0.,
         }
     }
+}
 
+impl Rotation {
     #[inline]
     pub fn get_rotation(&self) -> Quat {
         Quat::from_axis_angle(self.direction, self.angle)
     }
 }
 
-impl Transform {
-    pub fn new() -> Self {
+impl Default for Transform {
+    fn default() -> Self {
         Self {
             position: Vec3::ZERO,
             scale: Vec3::ONE,
-            rotation: Rotation::new(),
+            rotation: Rotation::default(),
         }
     }
+}
 
+impl Transform {
     pub fn update_pos(&mut self, dif: Vec3) {
         self.position += dif;
     }
@@ -46,7 +50,7 @@ impl Transform {
         Self {
             position,
             scale: Vec3::ONE,
-            rotation: Rotation::new(),
+            rotation: Rotation::default(),
         }
     }
 

@@ -10,3 +10,5 @@ authors = ["Abdulmelik Bekmez"]
 glutin = "0.29.1"
 gl = "*"
 glam = "0.21.3"
+rayon = "1.7.0"
+rand = "*"

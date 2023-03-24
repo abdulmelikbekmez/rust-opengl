@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use gl::types::GLuint;
 
 pub struct VertexBuffer {
@@ -6,17 +8,13 @@ pub struct VertexBuffer {
     byte_length: i32,
 }
 
-static mut BINDED_ID: GLuint = 0;
-
 impl VertexBuffer {
     pub fn new<const N: usize>(data: &[[f32; N]]) -> Self {
         let mut id = 0;
         unsafe {
-            gl::GenBuffers(1, &mut id);
-            gl::BindBuffer(gl::ARRAY_BUFFER, id);
-            BINDED_ID = id;
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
+            gl::CreateBuffers(1, &mut id);
+            gl::NamedBufferData(
+                id,
                 std::mem::size_of_val(data) as isize,
                 data.as_ptr().cast(),
                 gl::STATIC_DRAW,
@@ -32,16 +30,13 @@ impl VertexBuffer {
     pub fn instanced<T>(element_count: isize) -> Self {
         let mut id = 0;
         unsafe {
-            gl::GenBuffers(1, &mut id);
-            gl::BindBuffer(gl::ARRAY_BUFFER, id);
-            BINDED_ID = id;
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
+            gl::CreateBuffers(1, &mut id);
+            gl::NamedBufferData(
+                id,
                 element_count * std::mem::size_of::<T>() as isize,
                 std::ptr::null(),
                 gl::DYNAMIC_DRAW,
             );
-
             let byte_length = std::mem::size_of::<T>() as i32;
             Self {
                 id,
@@ -49,6 +44,11 @@ impl VertexBuffer {
                 byte_length,
             }
         }
+    }
+
+    #[inline]
+    pub fn get_id(&self) -> GLuint {
+        return self.id;
     }
 
     #[inline]
@@ -61,14 +61,16 @@ impl VertexBuffer {
         return self.byte_length;
     }
 
-    #[inline]
-    pub fn bind(&self) {
-        unsafe {
-            if self.id != BINDED_ID {
-                gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
-                BINDED_ID = self.id;
-            }
-        }
+    pub fn set_data<T>(&self, data: &[T], offset: isize) -> isize {
+        let byte_length = (std::mem::size_of::<T>() * data.len()) as isize;
+        let t = Instant::now();
+        unsafe { gl::NamedBufferSubData(self.id, offset, byte_length, data.as_ptr().cast()) }
+        println!(
+            "set data with byte {} takes {} micro",
+            byte_length,
+            t.elapsed().as_micros()
+        );
+        byte_length
     }
 }
 

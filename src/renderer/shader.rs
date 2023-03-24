@@ -71,15 +71,14 @@ impl ShaderProgram {
     }
 
     fn get_location(&mut self, name: &'static str) -> GLint {
-        if let Some(&loc) = self.locations.get(name) {
-            return loc;
-        }
-
-        unsafe {
-            let c_str = CString::new(name.as_bytes()).unwrap();
-            let loc = gl::GetUniformLocation(self.id, c_str.as_ptr());
-            self.locations.insert(name, loc);
-            return loc;
+        match self.locations.get(name) {
+            Some(&loc) => loc,
+            None => unsafe {
+                let c_str = CString::new(name.as_bytes()).unwrap();
+                let loc = gl::GetUniformLocation(self.id, c_str.as_ptr());
+                self.locations.insert(name, loc);
+                loc
+            },
         }
     }
 
