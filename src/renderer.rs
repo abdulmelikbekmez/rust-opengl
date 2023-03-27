@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use glam::Mat4;
 
 use crate::{application::Window, glcall, scene::Scene};
@@ -76,14 +74,12 @@ impl Renderer {
         scene.get_mut_static_entities().clear();
 
         let mut count = self.count;
-        let t = Instant::now();
         let data: Vec<_> = scene
             .get_dynamic_entities()
             .iter()
             .map(|e| e.get_transform().get_matrix())
             .collect();
         count += scene.get_dynamic_entities().len() as i32;
-        println!("calculating data takes {} micro", t.elapsed().as_micros());
 
         self.vao
             .instanced_buffer

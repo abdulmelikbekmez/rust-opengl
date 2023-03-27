@@ -1,14 +1,17 @@
 use gl::types::GLuint;
 use glam::Mat4;
 
-use super::{mesh::Mesh, vertex_buffer::VertexBuffer};
+use super::{
+    mesh::Mesh,
+    vertex_buffer::{Buffer, Dynamic},
+};
 
 static mut BINDED_ID: GLuint = 0;
 
 pub struct VertexArray {
     id: GLuint,
     index_size: i32,
-    pub instanced_buffer: VertexBuffer,
+    pub instanced_buffer: Buffer<Dynamic>,
 }
 
 impl VertexArray {
@@ -28,7 +31,7 @@ impl VertexArray {
                     binding_index,
                     buffer.get_id(),
                     0,
-                    buffer.get_byte_length(),
+                    buffer.get_stride(),
                 );
 
                 // enable vertex array attrib
@@ -47,14 +50,14 @@ impl VertexArray {
                 binding_index += 1;
                 index += 1;
             }
-            let instanced_buffer = VertexBuffer::instanced::<Mat4>(instance_count);
+            let instanced_buffer = Buffer::<Dynamic>::instanced::<Mat4>(instance_count);
 
             gl::VertexArrayVertexBuffer(
                 id,
                 binding_index,
                 instanced_buffer.get_id(),
                 0,
-                instanced_buffer.get_byte_length(),
+                instanced_buffer.get_stride(),
             );
 
             for i in 0..4 {

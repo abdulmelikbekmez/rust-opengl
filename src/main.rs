@@ -44,7 +44,7 @@ impl Application for MyApp {
     fn new(window: &Window) -> Self {
         let renderer = Renderer::cube(window);
         let mut scene = Scene::new();
-        scene.add_entities(100, true);
+        scene.add_entities(50, false);
         Self { renderer, scene }
     }
 

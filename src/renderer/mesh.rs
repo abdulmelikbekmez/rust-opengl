@@ -1,6 +1,9 @@
 use gl::types::*;
 
-use super::{index_buffer::IndexBuffer, vertex_buffer::VertexBuffer};
+use super::{
+    index_buffer::IndexBuffer,
+    vertex_buffer::{Buffer, Static},
+};
 
 type Pos = [f32; 3];
 type Color = [f32; 3];
@@ -38,18 +41,21 @@ const ELEMENT_DATA: [GLuint; 36] = [
 ];
 
 pub struct Mesh {
-    pub vb_list: Vec<VertexBuffer>,
+    pub vb_list: Vec<Buffer<Static>>,
     pub index_buffer: IndexBuffer,
 }
 
 impl Mesh {
-    fn new<const N: usize>(
-        pos_data: &[[f32; N]],
-        color_data: &[[f32; N]],
+    fn new<const N: usize, R>(
+        pos_data: &[[R; N]],
+        color_data: &[[R; N]],
         index_data: &[GLuint],
     ) -> Self {
         Self {
-            vb_list: vec![VertexBuffer::new(pos_data), VertexBuffer::new(color_data)],
+            vb_list: vec![
+                Buffer::<Static>::new(pos_data),
+                Buffer::<Static>::new(color_data),
+            ],
             index_buffer: IndexBuffer::new(index_data),
         }
     }

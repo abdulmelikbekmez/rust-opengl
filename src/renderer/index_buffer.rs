@@ -23,7 +23,7 @@ impl IndexBuffer {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn get_id(&self) -> GLuint {
         self.id
     }

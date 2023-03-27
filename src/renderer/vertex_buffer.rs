@@ -1,16 +1,56 @@
-use std::time::Instant;
+use std::marker::PhantomData;
 
 use gl::types::GLuint;
 
-pub struct VertexBuffer {
-    id: GLuint,
-    element_count: i32,
-    byte_length: i32,
+pub trait Vertex {
+    fn size(&self) -> u32;
 }
 
-impl VertexBuffer {
-    pub fn new<const N: usize>(data: &[[f32; N]]) -> Self {
+pub trait Buf {}
+
+pub struct Dynamic;
+impl Buf for Dynamic {}
+pub struct Static;
+impl Buf for Static {}
+
+pub struct Buffer<T: Buf> {
+    id: GLuint,
+    element_count: i32,
+    stride: i32,
+    t_buf_type: PhantomData<T>,
+}
+
+impl<T: Buf> Drop for Buffer<T> {
+    fn drop(&mut self) {
+        unsafe {
+            println!("buffer deleted");
+            gl::DeleteBuffers(1, &self.id);
+        }
+    }
+}
+
+impl<T: Buf> Buffer<T> {
+    #[inline(always)]
+    pub fn get_id(&self) -> GLuint {
+        self.id
+    }
+
+    #[inline(always)]
+    pub fn get_element_count(&self) -> i32 {
+        self.element_count
+    }
+
+    #[inline(always)]
+    pub fn get_stride(&self) -> i32 {
+        self.stride
+    }
+}
+
+impl Buffer<Static> {
+    pub fn new<T, const N: usize>(data: &[[T; N]]) -> Self {
         let mut id = 0;
+        let stride = std::mem::size_of::<T>() as i32 * N as i32;
+        let element_count = N as i32;
         unsafe {
             gl::CreateBuffers(1, &mut id);
             gl::NamedBufferData(
@@ -22,63 +62,37 @@ impl VertexBuffer {
         }
         Self {
             id,
-            element_count: N as i32,
-            byte_length: N as i32 * std::mem::size_of::<f32>() as i32,
+            element_count,
+            stride,
+            t_buf_type: PhantomData,
         }
     }
+}
 
-    pub fn instanced<T>(element_count: isize) -> Self {
+impl Buffer<Dynamic> {
+    pub fn set_data<T>(&self, data: &[T], offset: isize) -> isize {
+        let byte_length = (std::mem::size_of::<T>() * data.len()) as isize;
+        unsafe { gl::NamedBufferSubData(self.get_id(), offset, byte_length, data.as_ptr().cast()) }
+        byte_length
+    }
+
+    pub fn instanced<T>(instance_count: isize) -> Self {
         let mut id = 0;
         unsafe {
             gl::CreateBuffers(1, &mut id);
             gl::NamedBufferData(
                 id,
-                element_count * std::mem::size_of::<T>() as isize,
+                instance_count * std::mem::size_of::<T>() as isize,
                 std::ptr::null(),
                 gl::DYNAMIC_DRAW,
             );
-            let byte_length = std::mem::size_of::<T>() as i32;
+            let stride = std::mem::size_of::<T>() as i32;
             Self {
                 id,
-                element_count: byte_length / std::mem::size_of::<f32>() as i32,
-                byte_length,
+                element_count: stride / std::mem::size_of::<f32>() as i32,
+                stride,
+                t_buf_type: PhantomData,
             }
-        }
-    }
-
-    #[inline]
-    pub fn get_id(&self) -> GLuint {
-        return self.id;
-    }
-
-    #[inline]
-    pub fn get_element_count(&self) -> i32 {
-        return self.element_count;
-    }
-
-    #[inline]
-    pub fn get_byte_length(&self) -> i32 {
-        return self.byte_length;
-    }
-
-    pub fn set_data<T>(&self, data: &[T], offset: isize) -> isize {
-        let byte_length = (std::mem::size_of::<T>() * data.len()) as isize;
-        let t = Instant::now();
-        unsafe { gl::NamedBufferSubData(self.id, offset, byte_length, data.as_ptr().cast()) }
-        println!(
-            "set data with byte {} takes {} micro",
-            byte_length,
-            t.elapsed().as_micros()
-        );
-        byte_length
-    }
-}
-
-impl Drop for VertexBuffer {
-    fn drop(&mut self) {
-        unsafe {
-            println!("vertex buffer deleted");
-            gl::DeleteBuffers(1, &self.id);
         }
     }
 }
